@@ -1,3 +1,13 @@
+@import './App.css';
+@import './components/SearchBar.css';
+@import './components/LoadingSpinner.css';
+@import './components/ErrorAlert.css';
+@import './components/HealthScore.css';
+@import './components/RepositoryCard.css';
+@import './components/RepositoryDetail.css';
+@import './components/RepositoryCompare.css';
+@import './components/RepositoryList.css';
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

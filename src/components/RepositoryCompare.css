@@ -1,0 +1,254 @@
+.compare-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1060;
+  overflow-y: auto;
+  animation: fadeIn 0.2s ease;
+}
+
+.compare-dialog {
+  min-height: 100vh;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compare-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 1200px;
+  animation: slideUp 0.3s ease;
+}
+
+.compare-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.compare-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0;
+}
+
+.compare-close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.compare-close-btn:hover {
+  color: #4a5568;
+  background: #f7fafc;
+}
+
+.compare-body {
+  padding: 2rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.repo-card-compare {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.repo-header-compare {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.repo-avatar-compare {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.repo-info-compare h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.25rem 0;
+}
+
+.repo-info-compare p {
+  font-size: 0.875rem;
+  color: #718096;
+  margin: 0;
+}
+
+.stats-compare {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.stat-compare-item {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-compare-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.stat-compare-label {
+  font-size: 0.75rem;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.25rem;
+}
+
+.languages-compare {
+  margin-top: 1.5rem;
+}
+
+.languages-compare h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+}
+
+.language-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.language-tag {
+  padding: 0.25rem 0.75rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.comparison-summary {
+  grid-column: span 2;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(to right, #ebf4ff, #faf5ff);
+  border-radius: 12px;
+}
+
+.summary-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.summary-icon {
+  font-size: 1.25rem;
+}
+
+.compare-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.close-compare-btn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: #edf2f7;
+  color: #4a5568;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-compare-btn:hover {
+  background: #e2e8f0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 992px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .comparison-summary {
+    grid-column: span 1;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .compare-dialog {
+    padding: 0.5rem;
+  }
+  
+  .compare-body {
+    padding: 1.5rem;
+  }
+  
+  .stats-compare {
+    grid-template-columns: 1fr;
+  }
+}

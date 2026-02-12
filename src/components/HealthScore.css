@@ -1,0 +1,149 @@
+.health-score-container {
+  background: linear-gradient(to right, #f9fafb, white);
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.health-score-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.health-score-icon {
+  font-size: 1.25rem;
+}
+
+.health-score-main {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.score-circle-container {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.score-circle-bg {
+  fill: none;
+  stroke: #edf2f7;
+  stroke-width: 3;
+}
+
+.score-circle-progress {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.score-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.score-text.excellent { color: #38a169; }
+.score-text.good { color: #d69e2e; }
+.score-text.fair { color: #dd6b20; }
+.score-text.poor { color: #e53e3e; }
+
+.score-explanation {
+  flex: 1;
+  margin-left: 1.5rem;
+}
+
+.score-explanation p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.score-breakdown {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.score-breakdown-item {
+  color: #718096;
+}
+
+.score-breakdown-item span {
+  font-weight: 600;
+  color: #2d3748;
+  margin-left: 0.25rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.metric-label {
+  color: #718096;
+}
+
+.metric-value {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.metric-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #edf2f7;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.metric-fill {
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+.metric-fill.blue { background-color: #4299e1; }
+.metric-fill.green { background-color: #48bb78; }
+.metric-fill.purple { background-color: #9f7aea; }
+
+@media (max-width: 768px) {
+  .health-score-main {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .score-explanation {
+    margin-left: 0;
+    margin-top: 1rem;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

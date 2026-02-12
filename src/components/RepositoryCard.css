@@ -1,0 +1,174 @@
+.repository-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.repository-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border-color: #cbd5e0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-owner {
+  font-size: 0.875rem;
+  color: #718096;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-description {
+  color: #4a5568;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.85rem;
+}
+
+.language-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: white;
+  margin-bottom: 0.75rem;
+}
+
+.language-badge.typescript { background-color: #3178c6; }
+.language-badge.javascript { background-color: #f7df1e; color: #1a202c; }
+.language-badge.python { background-color: #3572a5; }
+.language-badge.java { background-color: #b07219; }
+.language-badge.cplusplus { background-color: #00599c; }
+.language-badge.csharp { background-color: #178600; }
+.language-badge.go { background-color: #00add8; }
+.language-badge.rust { background-color: #dea584; }
+.language-badge.php { background-color: #4f5d95; }
+.language-badge.ruby { background-color: #701516; }
+.language-badge.default { background-color: #6c757d; }
+
+.insight-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.insight-icon {
+  font-size: 1.1rem;
+  color: white;
+}
+
+.insight-text {
+  color: white;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: #a0aec0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+}
+
+.card-updated {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+
+@media (max-width: 768px) {
+  .repository-card {
+    padding: 1.25rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .card-header {
+    flex-direction: row;
+  }
+  
+  .card-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
