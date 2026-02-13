@@ -2,7 +2,7 @@
 
 A powerful GitHub repository explorer with advanced features for discovering, analyzing, and comparing public repositories.
 
-![GitLens Explorer](https://raw.githubusercontent.com/yourusername/gitlens-explorer/main/images/home page.PNG)
+https://github.com/Qamza25/github-explorer/blob/main/images/home%20page.PNG
 
 ##  Features
 
