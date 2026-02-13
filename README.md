@@ -33,7 +33,7 @@ A powerful GitHub repository explorer with advanced features for discovering, an
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/gitlens-explorer.git
+git clone https://github.com/Qamza25/github-explorer.git
 
 # Navigate to project directory
 cd gitlens-explorer
