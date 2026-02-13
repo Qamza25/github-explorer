@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Repository } from '../types/repository.types';
-import { useRepositoryStore } from '../store/repositoryStore';
+import { githubService } from '../services/githubService';
 import { RepositoryCard } from './RepositoryCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorAlert } from './ErrorAlert';
@@ -34,45 +34,14 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 30;
 
-  const {
-    searchRepositoriesWithCache,
-    setError: setStoreError,
-    clearError
-  } = useRepositoryStore();
-
-  const loadRepositories = useCallback(async () => {
-    if (!searchQuery.trim()) return;
-
-    setLoading(true);
-    setError(null);
-    clearError();
-
-    try {
-      if (searchType === 'username') {
-        await loadUserRepositories();
-      } else {
-        await loadSearchResults();
-      }
-    } catch (err: any) {
-      handleError(err);
-    }
-  }, [searchQuery, searchType, filters, currentPage]);
-
-  useEffect(() => {
-    if (searchQuery) {
-      loadRepositories();
-    }
-  }, [searchQuery, searchType, filters, currentPage, loadRepositories]);
-
-  const loadSearchResults = async () => {
+  const loadSearchResults = useCallback(async () => {
     const query = searchQuery.startsWith('@') 
       ? searchQuery.substring(1) 
       : searchQuery;
 
-    const response = await searchRepositoriesWithCache(
+    const response = await githubService.searchRepositories(
       query,
       currentPage,
       filters.sortBy,
@@ -83,27 +52,41 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
     );
 
     setRepositories(response.items);
-    setTotalCount(response.total_count);
-    setTotalPages(Math.ceil(response.total_count / itemsPerPage));
     onTotalCountChange(response.total_count);
-    setLoading(false);
-  };
+    setTotalPages(Math.ceil(response.total_count / itemsPerPage));
+  }, [searchQuery, currentPage, filters, onTotalCountChange]);
 
-  const loadUserRepositories = async () => {
-    // This would need to be implemented with caching
-    // For now, we'll use a placeholder
-    setRepositories([]);
-    setTotalCount(0);
-    setTotalPages(0);
-    onTotalCountChange(0);
-    setLoading(false);
-    setError('User repository search with caching is being implemented');
-  };
-
-  const sortRepositories = (repos: Repository[]): Repository[] => {
-    const sorted = [...repos];
+  const loadUserRepositories = useCallback(async () => {
+    const username = searchQuery.replace('@', '').replace('user:', '');
     
-    sorted.sort((a, b) => {
+    const repos = await githubService.getUserRepositories(
+      username,
+      currentPage,
+      itemsPerPage
+    );
+
+    let filteredRepos = [...repos];
+    
+    if (filters.language) {
+      filteredRepos = filteredRepos.filter(repo => 
+        repo.language?.toLowerCase() === filters.language?.toLowerCase()
+      );
+    }
+
+    if (filters.minStars !== undefined) {
+      filteredRepos = filteredRepos.filter(repo => 
+        repo.stargazers_count >= (filters.minStars || 0)
+      );
+    }
+
+    if (filters.maxStars !== undefined) {
+      filteredRepos = filteredRepos.filter(repo => 
+        repo.stargazers_count <= (filters.maxStars || Infinity)
+      );
+    }
+
+    // Apply sorting
+    filteredRepos.sort((a, b) => {
       let comparison = 0;
       
       switch (filters.sortBy) {
@@ -118,30 +101,60 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
           const dateB = new Date(b.updated_at || 0).getTime();
           comparison = dateB - dateA;
           break;
+        default:
+          comparison = (b.stargazers_count || 0) - (a.stargazers_count || 0);
       }
       
       return filters.order === 'asc' ? -comparison : comparison;
     });
-    
-    return sorted;
-  };
 
-  const handleError = (err: any) => {
+    setRepositories(filteredRepos);
+    onTotalCountChange(filteredRepos.length);
+    setTotalPages(Math.ceil(filteredRepos.length / itemsPerPage));
+  }, [searchQuery, currentPage, filters, onTotalCountChange]);
+
+  const handleError = useCallback((err: any) => {
     console.error('Error loading repositories:', err);
     
     if (err.response?.status === 404) {
       setError(`User "${searchQuery}" not found.`);
     } else if (err.response?.status === 403) {
       setError('Rate limit exceeded. Please wait a moment.');
+    } else if (err.code === 'ECONNABORTED' || err.message?.includes('Network')) {
+      setError('Network error. Please check your connection.');
     } else {
       setError(err.message || 'Failed to load repositories');
     }
     
     setLoading(false);
     setRepositories([]);
-    setTotalCount(0);
     onTotalCountChange(0);
-  };
+  }, [searchQuery, onTotalCountChange]);
+
+  const loadRepositories = useCallback(async () => {
+    if (!searchQuery.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (searchType === 'username') {
+        await loadUserRepositories();
+      } else {
+        await loadSearchResults();
+      }
+    } catch (err: any) {
+      handleError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, searchType, loadSearchResults, loadUserRepositories, handleError]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      loadRepositories();
+    }
+  }, [searchQuery, searchType, filters, currentPage, loadRepositories]);
 
   const nextPage = () => {
     if (currentPage < totalPages) {
@@ -185,16 +198,22 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                     className="pagination-btn"
                     onClick={previousPage}
                     disabled={currentPage === 1}
+                    aria-label="Previous page"
                   >
                     ← Prev
                   </button>
-                  <button className="pagination-btn active">
+                  <button 
+                    className="pagination-btn active"
+                    aria-label={`Page ${currentPage} of ${totalPages}`}
+                    aria-current="page"
+                  >
                     Page {currentPage} of {totalPages}
                   </button>
                   <button
                     className="pagination-btn"
                     onClick={nextPage}
                     disabled={currentPage >= totalPages}
+                    aria-label="Next page"
                   >
                     Next →
                   </button>
@@ -203,7 +222,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
             </>
           ) : (
             <div className="no-results">
-              <div className="no-results-icon">🔍</div>
+              <div className="no-results-icon" aria-hidden="true">🔍</div>
               <h3>No repositories found</h3>
               <p>Try a different search term or filter</p>
             </div>
