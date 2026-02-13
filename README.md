@@ -24,7 +24,6 @@ A powerful GitHub repository explorer with advanced features for discovering, an
 - **TypeScript** – Type safety
 - **Zustand** – State management
 - **Axios** – HTTP client
-- **React Markdown** – README rendering
 - **CSS3** – Styling with responsive design
 
 ---
