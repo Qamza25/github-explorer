@@ -338,6 +338,15 @@ npm run cypress:open
 
 ---
 
+##  Possible Future Enghancements 
+```
+Advanced Search Filters:	Search by topics, README content, license type, repository age, exclude forks
+Enhanced Comparison:	Side-by-side code diff, dependency comparison
+GitHub OAuth:	Star repos, create collections, save preferences
+Community Features:	User collections, voting system, trending repos
+Star history timeline charts
+```
+
 ##  License
 
 Copyright © 2026 GitLens Explorer  
