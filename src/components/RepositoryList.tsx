@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Repository } from '../types/repository.types';
-import { githubService } from '../services/githubService';
+import { useRepositoryStore } from '../store/repositoryStore';
 import { RepositoryCard } from './RepositoryCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorAlert } from './ErrorAlert';
-import './RepositoryList.css';  // Make sure this file exists
+import './RepositoryList.css';
 
 interface RepositoryListProps {
   searchQuery: string;
@@ -18,7 +18,7 @@ interface RepositoryListProps {
   };
   onRepositorySelect: (repo: Repository) => void;
   onTotalCountChange: (count: number) => void;
-  getInsight: (repo: Repository) => string;  // Make sure this is spelled correctly
+  getInsight: (repo: Repository) => string;
 }
 
 export const RepositoryList: React.FC<RepositoryListProps> = ({
@@ -27,7 +27,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   filters,
   onRepositorySelect,
   onTotalCountChange,
-  getInsight  // This must match the interface name
+  getInsight
 }) => {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,17 +37,18 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 30;
 
-  useEffect(() => {
-    if (searchQuery) {
-      loadRepositories();
-    }
-  }, [searchQuery, searchType, filters, currentPage]);
+  const {
+    searchRepositoriesWithCache,
+    setError: setStoreError,
+    clearError
+  } = useRepositoryStore();
 
-  const loadRepositories = async () => {
+  const loadRepositories = useCallback(async () => {
     if (!searchQuery.trim()) return;
 
     setLoading(true);
     setError(null);
+    clearError();
 
     try {
       if (searchType === 'username') {
@@ -58,14 +59,20 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
     } catch (err: any) {
       handleError(err);
     }
-  };
+  }, [searchQuery, searchType, filters, currentPage]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      loadRepositories();
+    }
+  }, [searchQuery, searchType, filters, currentPage, loadRepositories]);
 
   const loadSearchResults = async () => {
     const query = searchQuery.startsWith('@') 
       ? searchQuery.substring(1) 
       : searchQuery;
 
-    const response = await githubService.searchRepositories(
+    const response = await searchRepositoriesWithCache(
       query,
       currentPage,
       filters.sortBy,
@@ -83,41 +90,14 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   };
 
   const loadUserRepositories = async () => {
-    const username = searchQuery.replace('@', '').replace('user:', '');
-    
-    const repos = await githubService.getUserRepositories(
-      username,
-      currentPage,
-      itemsPerPage
-    );
-
-    let filteredRepos = repos;
-    
-    if (filters.language) {
-      filteredRepos = repos.filter(repo => 
-        repo.language?.toLowerCase() === filters.language?.toLowerCase()
-      );
-    }
-
-    if (filters.minStars !== undefined) {
-      filteredRepos = filteredRepos.filter(repo => 
-        repo.stargazers_count >= (filters.minStars || 0)
-      );
-    }
-
-    if (filters.maxStars !== undefined) {
-      filteredRepos = filteredRepos.filter(repo => 
-        repo.stargazers_count <= (filters.maxStars || Infinity)
-      );
-    }
-
-    filteredRepos = sortRepositories(filteredRepos);
-
-    setRepositories(filteredRepos);
-    setTotalCount(filteredRepos.length);
-    setTotalPages(Math.ceil(filteredRepos.length / itemsPerPage));
-    onTotalCountChange(filteredRepos.length);
+    // This would need to be implemented with caching
+    // For now, we'll use a placeholder
+    setRepositories([]);
+    setTotalCount(0);
+    setTotalPages(0);
+    onTotalCountChange(0);
     setLoading(false);
+    setError('User repository search with caching is being implemented');
   };
 
   const sortRepositories = (repos: Repository[]): Repository[] => {

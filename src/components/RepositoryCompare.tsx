@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Repository, RepositoryHealth } from '../types/repository.types';
-import { githubService } from '../services/githubService';
+import { useRepositoryStore } from '../store/repositoryStore';
 import { formatNumber, formatDate } from '../utils/formatters';
 import { HealthScore } from './HealthScore';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ErrorAlert } from './ErrorAlert';
+import './RepositoryCompare.css';
 
 interface RepositoryCompareProps {
-  repository1: Repository | null;
-  repository2: Repository | null;
+  repository1: Repository;
+  repository2: Repository;
   onClose: () => void;
 }
 
@@ -20,114 +22,168 @@ export const RepositoryCompare: React.FC<RepositoryCompareProps> = ({
   const [health2, setHealth2] = useState<RepositoryHealth | null>(null);
   const [languages1, setLanguages1] = useState<any[]>([]);
   const [languages2, setLanguages2] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const {
+    getHealthWithCache,
+    getLanguagesWithCache,
+    clearError,
+    incrementRetry,
+    resetRetry
+  } = useRepositoryStore();
 
   useEffect(() => {
     const loadComparisonData = async () => {
-      if (!repository1 || !repository2) return;
-      
+      if (!repository1 || !repository2) {
+        setError('Repositories not available');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
+      
       try {
+        console.log('Loading comparison data for:', repository1.full_name, repository2.full_name);
+        
         const [health1Data, health2Data, langs1, langs2] = await Promise.all([
-          githubService.calculateHealthScore(repository1),
-          githubService.calculateHealthScore(repository2),
-          githubService.getLanguageStats(repository1.full_name),
-          githubService.getLanguageStats(repository2.full_name)
+          getHealthWithCache(repository1),
+          getHealthWithCache(repository2),
+          getLanguagesWithCache(repository1.full_name),
+          getLanguagesWithCache(repository2.full_name)
         ]);
         
         setHealth1(health1Data);
         setHealth2(health2Data);
-        setLanguages1(langs1.slice(0, 3));
-        setLanguages2(langs2.slice(0, 3));
-      } catch (error) {
-        console.error('Error loading comparison data:', error);
+        setLanguages1(langs1?.slice(0, 3) || []);
+        setLanguages2(langs2?.slice(0, 3) || []);
+        resetRetry();
+        setError(null);
+      } catch (err: any) {
+        console.error('Error loading comparison data:', err);
+        setError(err?.message || 'Failed to load comparison data. Please try again.');
+        incrementRetry();
       } finally {
         setLoading(false);
       }
     };
 
     loadComparisonData();
-  }, [repository1, repository2]);
+  }, [repository1?.full_name, repository2?.full_name, retryCount]);
 
-  if (!repository1 || !repository2) return null;
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    clearError();
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  if (!repository1 || !repository2) {
+    return (
+      <div className="compare-overlay" onClick={handleOverlayClick}>
+        <div className="compare-dialog">
+          <div className="compare-content">
+            <ErrorAlert 
+              message="Cannot compare: One or both repositories are missing" 
+              onRetry={onClose}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-      <div className="min-h-screen px-4 text-center">
-        <div className="fixed inset-0" onClick={onClose} />
-        
-        <div className="inline-block w-full max-w-6xl my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-          <div className="flex justify-between items-center p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">Compare Repositories</h2>
+    <div 
+      className="compare-overlay" 
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Compare repositories"
+      tabIndex={-1}
+    >
+      <div className="compare-dialog">
+        <div className="compare-content">
+          <div className="compare-header">
+            <h2 id="compare-title">Compare Repositories</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none"
+              className="compare-close-btn"
+              aria-label="Close comparison"
             >
-              <span className="text-3xl">&times;</span>
+              &times;
             </button>
           </div>
 
-          {loading ? (
-            <div className="p-12">
-              <LoadingSpinner message="Loading comparison data..." />
-            </div>
-          ) : (
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-8">
-                {/* Repository 1 */}
-                <div className="space-y-6">
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <div className="flex items-center gap-4 mb-4">
+          <div className="compare-body">
+            {loading ? (
+              <div style={{ padding: '3rem' }}>
+                <LoadingSpinner message="Loading comparison data..." />
+              </div>
+            ) : error ? (
+              <ErrorAlert 
+                message={error} 
+                onRetry={handleRetry}
+              />
+            ) : (
+              <>
+                <div className="compare-grid">
+                  {/* Repository 1 */}
+                  <div className="repo-card-compare">
+                    <div className="repo-header-compare">
                       <img
                         src={repository1.owner.avatar_url}
-                        alt={repository1.owner.login}
-                        className="w-16 h-16 rounded-full"
+                        alt={`${repository1.owner.login}'s avatar`}
+                        className="repo-avatar-compare"
                       />
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {repository1.name}
-                        </h3>
-                        <p className="text-gray-600">@{repository1.owner.login}</p>
+                      <div className="repo-info-compare">
+                        <h3>{repository1.name}</h3>
+                        <p>@{repository1.owner.login}</p>
                       </div>
                     </div>
 
                     {health1 && <HealthScore health={health1} />}
 
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Stars</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatNumber(repository1.stargazers_count)}
-                        </p>
+                    <div className="stats-compare">
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatNumber(repository1.stargazers_count)}</span>
+                        <span className="stat-compare-label">Stars</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Forks</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatNumber(repository1.forks_count)}
-                        </p>
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatNumber(repository1.forks_count)}</span>
+                        <span className="stat-compare-label">Forks</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Issues</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatNumber(repository1.open_issues_count)}
-                        </p>
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatNumber(repository1.open_issues_count)}</span>
+                        <span className="stat-compare-label">Issues</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Created</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {formatDate(repository1.created_at)}
-                        </p>
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatDate(repository1.created_at)}</span>
+                        <span className="stat-compare-label">Created</span>
                       </div>
                     </div>
 
-                    {languages1.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Top Languages</p>
-                        <div className="flex gap-2">
+                    {languages1 && languages1.length > 0 && (
+                      <div className="languages-compare">
+                        <h4>Top Languages</h4>
+                        <div className="language-tags">
                           {languages1.map(lang => (
                             <span
                               key={lang.name}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                              className="language-tag"
                             >
                               {lang.name} ({lang.percentage}%)
                             </span>
@@ -136,62 +192,50 @@ export const RepositoryCompare: React.FC<RepositoryCompareProps> = ({
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Repository 2 */}
-                <div className="space-y-6">
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <div className="flex items-center gap-4 mb-4">
+                  {/* Repository 2 */}
+                  <div className="repo-card-compare">
+                    <div className="repo-header-compare">
                       <img
                         src={repository2.owner.avatar_url}
-                        alt={repository2.owner.login}
-                        className="w-16 h-16 rounded-full"
+                        alt={`${repository2.owner.login}'s avatar`}
+                        className="repo-avatar-compare"
                       />
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {repository2.name}
-                        </h3>
-                        <p className="text-gray-600">@{repository2.owner.login}</p>
+                      <div className="repo-info-compare">
+                        <h3>{repository2.name}</h3>
+                        <p>@{repository2.owner.login}</p>
                       </div>
                     </div>
 
                     {health2 && <HealthScore health={health2} />}
 
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Stars</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatNumber(repository2.stargazers_count)}
-                        </p>
+                    <div className="stats-compare">
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatNumber(repository2.stargazers_count)}</span>
+                        <span className="stat-compare-label">Stars</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Forks</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatNumber(repository2.forks_count)}
-                        </p>
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatNumber(repository2.forks_count)}</span>
+                        <span className="stat-compare-label">Forks</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Issues</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatNumber(repository2.open_issues_count)}
-                        </p>
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatNumber(repository2.open_issues_count)}</span>
+                        <span className="stat-compare-label">Issues</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Created</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {formatDate(repository2.created_at)}
-                        </p>
+                      <div className="stat-compare-item">
+                        <span className="stat-compare-value">{formatDate(repository2.created_at)}</span>
+                        <span className="stat-compare-label">Created</span>
                       </div>
                     </div>
 
-                    {languages2.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Top Languages</p>
-                        <div className="flex gap-2">
+                    {languages2 && languages2.length > 0 && (
+                      <div className="languages-compare">
+                        <h4>Top Languages</h4>
+                        <div className="language-tags">
                           {languages2.map(lang => (
                             <span
                               key={lang.name}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                              className="language-tag"
                             >
                               {lang.name} ({lang.percentage}%)
                             </span>
@@ -201,51 +245,60 @@ export const RepositoryCompare: React.FC<RepositoryCompareProps> = ({
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* Comparison Summary */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
-                <h4 className="text-lg font-semibold mb-4">Comparison Summary</h4>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {repository1.stargazers_count > repository2.stargazers_count
-                        ? `⭐ ${repository1.name} has ${formatNumber(repository1.stargazers_count - repository2.stargazers_count)} more stars`
-                        : `⭐ ${repository2.name} has ${formatNumber(repository2.stargazers_count - repository1.stargazers_count)} more stars`
-                      }
-                    </p>
-                    {health1 && health2 && (
-                      <p className="text-sm text-gray-600">
-                        {health1.score > health2.score
-                          ? `🏥 ${repository1.name} has better health score (${health1.score} vs ${health2.score})`
-                          : `🏥 ${repository2.name} has better health score (${health2.score} vs ${health1.score})`
-                        }
-                      </p>
-                    )}
+                {/* Comparison Summary */}
+                {health1 && health2 && (
+                  <div className="comparison-summary">
+                    <h4 className="summary-title">Comparison Summary</h4>
+                    <div className="summary-grid">
+                      <div className="summary-item">
+                        <span className="summary-icon">⭐</span>
+                        <span>
+                          {repository1.stargazers_count > repository2.stargazers_count
+                            ? `${repository1.name} has ${formatNumber(repository1.stargazers_count - repository2.stargazers_count)} more stars`
+                            : `${repository2.name} has ${formatNumber(repository2.stargazers_count - repository1.stargazers_count)} more stars`
+                          }
+                        </span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-icon">🍴</span>
+                        <span>
+                          {repository1.forks_count > repository2.forks_count
+                            ? `${repository1.name} has ${formatNumber(repository1.forks_count - repository2.forks_count)} more forks`
+                            : `${repository2.name} has ${formatNumber(repository2.forks_count - repository1.forks_count)} more forks`
+                          }
+                        </span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-icon">🏥</span>
+                        <span>
+                          {health1.score > health2.score
+                            ? `${repository1.name} has better health score (${health1.score} vs ${health2.score})`
+                            : `${repository2.name} has better health score (${health2.score} vs ${health1.score})`
+                          }
+                        </span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-icon">⚠️</span>
+                        <span>
+                          {repository1.open_issues_count < repository2.open_issues_count
+                            ? `${repository1.name} has fewer open issues`
+                            : `${repository2.name} has fewer open issues`
+                          }
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {repository1.forks_count > repository2.forks_count
-                        ? `🍴 ${repository1.name} has ${formatNumber(repository1.forks_count - repository2.forks_count)} more forks`
-                        : `🍴 ${repository2.name} has ${formatNumber(repository2.forks_count - repository1.forks_count)} more forks`
-                      }
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {repository1.open_issues_count < repository2.open_issues_count
-                        ? `⚠️ ${repository1.name} has fewer open issues`
-                        : `⚠️ ${repository2.name} has fewer open issues`
-                      }
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+                )}
+              </>
+            )}
+          </div>
 
-          <div className="p-6 border-t border-gray-200">
+          <div className="compare-footer">
             <button
               onClick={onClose}
-              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="close-compare-btn"
+              aria-label="Close comparison"
             >
               Close Comparison
             </button>

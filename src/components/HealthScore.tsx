@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { RepositoryHealth } from '../types/repository.types';
+import './HealthScore.css';
 
 interface HealthScoreProps {
   health: RepositoryHealth;
@@ -7,104 +8,131 @@ interface HealthScoreProps {
 
 export const HealthScore: React.FC<HealthScoreProps> = ({ health }) => {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'fair';
+    return 'poor';
   };
 
   const getProgressColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    if (score >= 40) return 'bg-orange-500';
-    return 'bg-red-500';
+    if (score >= 80) return '#10B981';
+    if (score >= 60) return '#F59E0B';
+    if (score >= 40) return '#F97316';
+    return '#EF4444';
   };
 
+  const scoreColorClass = getScoreColor(health.score);
+
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-white rounded-lg p-6 border border-gray-200">
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
-        <span className="mr-2">🏥</span>
+    <div className="health-score-container">
+      <h3 className="health-score-title">
+        <span className="health-score-icon">🏥</span>
         Repository Health Score
       </h3>
       
-      <div className="flex items-center mb-6">
-        <div className="relative w-24 h-24">
-          <svg className="w-full h-full" viewBox="0 0 36 36">
+      <div className="health-score-main">
+        <div className="score-circle-container">
+          <svg className="score-circle-svg" viewBox="0 0 36 36">
+            {/* Background circle */}
             <path
               d="M18 2.0845
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831"
               fill="none"
-              stroke="#E5E7EB"
+              stroke="#3a3f44"
               strokeWidth="3"
             />
+            {/* Progress circle */}
             <path
               d="M18 2.0845
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831"
               fill="none"
-              stroke={health.score >= 80 ? '#10B981' : health.score >= 60 ? '#F59E0B' : health.score >= 40 ? '#F97316' : '#EF4444'}
+              stroke={getProgressColor(health.score)}
               strokeWidth="3"
               strokeDasharray={`${health.score}, 100`}
+              strokeLinecap="round"
             />
-            <text x="18" y="20.5" textAnchor="middle" className={`text-2xl font-bold ${getScoreColor(health.score)}`}>
+            <text 
+              x="18" 
+              y="22" 
+              textAnchor="middle" 
+              className={`score-text ${scoreColorClass}`}
+              style={{ 
+                fontSize: '10px', 
+                fontWeight: 'bold',
+                fill: '#ffffff' /* WHITE text for the score number */
+              }}
+            >
               {health.score}
             </text>
           </svg>
         </div>
-        <div className="ml-6 flex-1">
-          <p className="text-gray-700 mb-2">{health.explanation}</p>
-          <div className="flex gap-4 text-sm">
-            <div>
-              <span className="text-gray-500">Issues:</span>
-              <span className="ml-1 font-semibold">{health.issueHealth}%</span>
+        
+        <div className="score-explanation">
+          <p className="score-explanation-text">{health.explanation}</p>
+          <div className="score-breakdown">
+            <div className="score-breakdown-item">
+              Issues: <span className="score-breakdown-value">{health.issueHealth}%</span>
             </div>
-            <div>
-              <span className="text-gray-500">Activity:</span>
-              <span className="ml-1 font-semibold">{health.commitHealth}%</span>
+            <div className="score-breakdown-item">
+              Activity: <span className="score-breakdown-value">{health.commitHealth}%</span>
             </div>
-            <div>
-              <span className="text-gray-500">Community:</span>
-              <span className="ml-1 font-semibold">{health.communityHealth}%</span>
+            <div className="score-breakdown-item">
+              Community: <span className="score-breakdown-value">{health.communityHealth}%</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 text-sm">
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="text-gray-600">Issue Resolution</span>
-            <span className="font-medium">{health.issueHealth}%</span>
+      <div className="metrics-grid">
+        <div className="metric-item">
+          <div className="metric-header">
+            <span className="metric-label">Issue Resolution</span>
+            <span className="metric-value">{health.issueHealth}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="metric-bar">
             <div
-              className="bg-blue-500 h-2 rounded-full"
+              className="metric-fill blue"
               style={{ width: `${health.issueHealth}%` }}
+              role="progressbar"
+              aria-valuenow={health.issueHealth}
+              aria-valuemin={0}
+              aria-valuemax={100}
             />
           </div>
         </div>
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="text-gray-600">Recent Activity</span>
-            <span className="font-medium">{health.commitHealth}%</span>
+        
+        <div className="metric-item">
+          <div className="metric-header">
+            <span className="metric-label">Recent Activity</span>
+            <span className="metric-value">{health.commitHealth}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="metric-bar">
             <div
-              className="bg-green-500 h-2 rounded-full"
+              className="metric-fill green"
               style={{ width: `${health.commitHealth}%` }}
+              role="progressbar"
+              aria-valuenow={health.commitHealth}
+              aria-valuemin={0}
+              aria-valuemax={100}
             />
           </div>
         </div>
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="text-gray-600">Community</span>
-            <span className="font-medium">{health.communityHealth}%</span>
+        
+        <div className="metric-item">
+          <div className="metric-header">
+            <span className="metric-label">Community</span>
+            <span className="metric-value">{health.communityHealth}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="metric-bar">
             <div
-              className="bg-purple-500 h-2 rounded-full"
+              className="metric-fill purple"
               style={{ width: `${health.communityHealth}%` }}
+              role="progressbar"
+              aria-valuenow={health.communityHealth}
+              aria-valuemin={0}
+              aria-valuemax={100}
             />
           </div>
         </div>

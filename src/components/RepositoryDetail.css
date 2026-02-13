@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   z-index: 9999;
   overflow-y: auto;
   animation: fadeIn 0.2s ease;
@@ -35,6 +35,8 @@
   justify-content: space-between;
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 16px 16px 0 0;
 }
 
 .modal-title {
@@ -53,13 +55,13 @@
 .modal-title-text h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #000000 !important; /* BLACK */
   margin: 0 0 0.25rem 0;
 }
 
 .modal-visibility {
   font-size: 0.875rem;
-  color: #718096;
+  color: #4a5568 !important; /* DARK GREY */
   margin: 0;
 }
 
@@ -82,6 +84,11 @@
 
 .compare-btn:hover {
   background: #5a67d8;
+  transform: translateY(-1px);
+}
+
+.compare-btn:active {
+  transform: translateY(0);
 }
 
 .close-btn {
@@ -105,6 +112,20 @@
   padding: 2rem;
   max-height: 70vh;
   overflow-y: auto;
+  background: white;
+  color: #000000; /* BLACK TEXT */
+}
+
+/* ALL TEXT IN MODAL BODY SHOULD BE BLACK */
+.modal-body p,
+.modal-body span,
+.modal-body div,
+.modal-body h3,
+.modal-body h4,
+.modal-body li,
+.modal-body td,
+.modal-body th {
+  color: #000000 !important;
 }
 
 .info-section {
@@ -122,11 +143,18 @@
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #2d3748;
+  color: #000000 !important; /* BLACK */
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.description-text {
+  color: #000000 !important; /* BLACK */
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
 }
 
 .stats-grid {
@@ -148,13 +176,13 @@
   display: block;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1a202c;
+  color: #000000 !important; /* BLACK */
   line-height: 1.2;
 }
 
 .stat-card-label {
   font-size: 0.875rem;
-  color: #718096;
+  color: #4a5568 !important; /* DARK GREY */
   margin-top: 0.5rem;
 }
 
@@ -175,11 +203,11 @@
 
 .language-name {
   font-weight: 600;
-  color: #2d3748;
+  color: #000000 !important; /* BLACK */
 }
 
 .language-percentage {
-  color: #718096;
+  color: #4a5568 !important; /* DARK GREY */
 }
 
 .progress-bar {
@@ -221,13 +249,13 @@
 
 .info-label {
   font-size: 0.875rem;
-  color: #718096;
+  color: #4a5568 !important; /* DARK GREY */
   font-weight: 500;
 }
 
 .info-value {
   font-weight: 600;
-  color: #2d3748;
+  color: #000000 !important; /* BLACK */
 }
 
 .readme-section {
@@ -241,8 +269,39 @@
   padding: 1.5rem;
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #2d3748;
+  color: #000000 !important; /* BLACK */
   overflow-x: auto;
+}
+
+/* README MARKDOWN STYLES - ALL BLACK */
+.readme-content h1,
+.readme-content h2,
+.readme-content h3,
+.readme-content h4,
+.readme-content h5,
+.readme-content h6,
+.readme-content p,
+.readme-content li,
+.readme-content code,
+.readme-content pre,
+.readme-content blockquote,
+.readme-content a {
+  color: #000000 !important;
+}
+
+.readme-content code {
+  background: #f1f5f9;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  color: #000000 !important;
+}
+
+.readme-content pre {
+  background: #f1f5f9;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  color: #000000 !important;
 }
 
 .modal-footer {
@@ -251,6 +310,8 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+  background: white;
+  border-radius: 0 0 16px 16px;
 }
 
 .github-btn {
@@ -270,6 +331,7 @@
 
 .github-btn:hover {
   background: #34495e;
+  transform: translateY(-1px);
 }
 
 .close-modal-btn {
@@ -286,6 +348,7 @@
 
 .close-modal-btn:hover {
   background: #e2e8f0;
+  transform: translateY(-1px);
 }
 
 @keyframes fadeIn {
@@ -342,4 +405,33 @@
   .close-modal-btn {
     width: 100%;
   }
+}
+
+/* Ensure HealthScore keeps dark background and white text in modal */
+.modal-body .health-score-container {
+  background: #2a2e33 !important;
+  border: 1px solid #3a3f44 !important;
+}
+
+.modal-body .health-score-title,
+.modal-body .health-score-icon,
+.modal-body .score-explanation-text,
+.modal-body .score-breakdown-item,
+.modal-body .score-breakdown-value,
+.modal-body .metric-label,
+.modal-body .metric-value {
+  color: #ffffff !important;
+}
+
+.modal-body .score-text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.modal-body .score-circle-bg {
+  stroke: #3a3f44 !important;
+}
+
+.modal-body .metric-bar {
+  background-color: #3a3f44 !important;
 }

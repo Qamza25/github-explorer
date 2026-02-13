@@ -1,40 +1,47 @@
 .health-score-container {
-  background: linear-gradient(to right, #f9fafb, white);
-  border: 1px solid #edf2f7;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  background: #2a2e33; /* Dark background */
+  border: 1px solid #3a3f44;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .health-score-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.125rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 1rem;
+  color: #ffffff !important; /* WHITE text */
+  margin-bottom: 0.75rem;
 }
 
 .health-score-icon {
-  font-size: 1.25rem;
+  font-size: 1rem;
+  color: #ffffff; /* WHITE */
 }
 
 .health-score-main {
   display: flex;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .score-circle-container {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.score-circle-svg {
+  width: 48px;
+  height: 48px;
 }
 
 .score-circle-bg {
   fill: none;
-  stroke: #edf2f7;
+  stroke: #3a3f44;
   stroke-width: 3;
 }
 
@@ -51,75 +58,81 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1.75rem;
+  font-size: 10px !important;
   font-weight: 700;
+  fill: #ffffff !important; /* WHITE text for score number */
+  color: #ffffff !important; /* WHITE text for score number */
 }
 
-.score-text.excellent { color: #38a169; }
-.score-text.good { color: #d69e2e; }
-.score-text.fair { color: #dd6b20; }
-.score-text.poor { color: #e53e3e; }
+.score-text.excellent { fill: #ffffff !important; color: #ffffff !important; }
+.score-text.good { fill: #ffffff !important; color: #ffffff !important; }
+.score-text.fair { fill: #ffffff !important; color: #ffffff !important; }
+.score-text.poor { fill: #ffffff !important; color: #ffffff !important; }
 
 .score-explanation {
   flex: 1;
-  margin-left: 1.5rem;
+  margin-left: 1rem;
 }
 
-.score-explanation p {
-  color: #4a5568;
-  line-height: 1.6;
-  margin-bottom: 0.75rem;
+.score-explanation-text {
+  color: #ffffff !important; /* WHITE text */
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
 }
 
 .score-breakdown {
   display: flex;
-  gap: 1rem;
-  font-size: 0.875rem;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  flex-wrap: wrap;
 }
 
 .score-breakdown-item {
-  color: #718096;
+  color: #e0e0e0 !important; /* LIGHT GREY text */
 }
 
-.score-breakdown-item span {
+.score-breakdown-value {
   font-weight: 600;
-  color: #2d3748;
-  margin-left: 0.25rem;
+  color: #ffffff !important; /* WHITE text for percentages */
+  margin-left: 0.2rem;
 }
 
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #3a3f44;
 }
 
 .metric-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .metric-header {
   display: flex;
   justify-content: space-between;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
 }
 
 .metric-label {
-  color: #718096;
+  color: #e0e0e0 !important; /* LIGHT GREY text */
 }
 
 .metric-value {
   font-weight: 600;
-  color: #2d3748;
+  color: #ffffff !important; /* WHITE text for percentages */
 }
 
 .metric-bar {
   width: 100%;
-  height: 6px;
-  background-color: #edf2f7;
-  border-radius: 3px;
+  height: 4px;
+  background-color: #3a3f44;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -132,6 +145,27 @@
 .metric-fill.green { background-color: #48bb78; }
 .metric-fill.purple { background-color: #9f7aea; }
 
+/* When HealthScore is used inside RepositoryDetail modal (white background) */
+.modal-body .health-score-container {
+  background: #2a2e33; /* Keep dark background even in modal */
+}
+
+.modal-body .health-score-title,
+.modal-body .health-score-icon,
+.modal-body .score-explanation-text,
+.modal-body .score-breakdown-item,
+.modal-body .score-breakdown-value,
+.modal-body .metric-label,
+.modal-body .metric-value {
+  color: #ffffff !important; /* Ensure WHITE text even in modal */
+}
+
+.modal-body .score-text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .health-score-main {
     flex-direction: column;
@@ -140,10 +174,15 @@
   
   .score-explanation {
     margin-left: 0;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
   }
   
   .metrics-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .score-breakdown {
+    justify-content: center;
   }
 }

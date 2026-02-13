@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Repository, RepositoryHealth } from '../types/repository.types';
-import { githubService } from '../services/githubService';
+import { useRepositoryStore } from '../store/repositoryStore';
 import { formatNumber, formatDate, formatSize } from '../utils/formatters';
 import { HealthScore } from './HealthScore';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -25,6 +25,12 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const {
+    getHealthWithCache,
+    getLanguagesWithCache,
+    getReadmeWithCache
+  } = useRepositoryStore();
+
   useEffect(() => {
     const loadRepositoryData = async () => {
       if (!repository) return;
@@ -35,13 +41,13 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
         console.log('Loading repository data for:', repository.full_name);
         
         const [langs, readmeContent, healthData] = await Promise.all([
-          githubService.getLanguageStats(repository.full_name),
-          githubService.getReadme(repository.owner.login, repository.name),
-          githubService.calculateHealthScore(repository)
+          getLanguagesWithCache(repository.full_name),
+          getReadmeWithCache(repository.owner.login, repository.name),
+          getHealthWithCache(repository)
         ]);
         
-        setLanguages(langs);
-        setReadme(readmeContent);
+        setLanguages(langs || []);
+        setReadme(readmeContent || '');
         setHealth(healthData);
       } catch (err) {
         console.error('Error loading repository details:', err);
@@ -52,7 +58,7 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
     };
 
     loadRepositoryData();
-  }, [repository]);
+  }, [repository, getLanguagesWithCache, getReadmeWithCache, getHealthWithCache]);
 
   // Prevent body scrolling when modal is open
   useEffect(() => {
@@ -70,6 +76,16 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
 
   const handleCloseClick = () => {
     onClose();
+  };
+
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Compare button clicked for:', repository.full_name);
+    if (onCompare) {
+      onCompare(repository);
+      onClose(); // Close the detail modal after adding to compare
+    }
   };
 
   const getLanguageClass = (language: string) => {
@@ -113,13 +129,18 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
             <div className="modal-actions">
               {onCompare && (
                 <button
-                  onClick={() => onCompare(repository)}
+                  onClick={handleCompareClick}
                   className="compare-btn"
+                  aria-label={`Compare ${repository.full_name}`}
                 >
                   Compare
                 </button>
               )}
-              <button onClick={handleCloseClick} className="close-btn">
+              <button 
+                onClick={handleCloseClick} 
+                className="close-btn"
+                aria-label="Close"
+              >
                 &times;
               </button>
             </div>
@@ -133,11 +154,11 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
               <ErrorAlert message={error} onRetry={() => window.location.reload()} />
             ) : (
               <>
-                {/* Description */}
+                {/* Description - BLACK TEXT */}
                 {repository.description && (
                   <div className="info-section">
                     <h3 className="section-title">Description</h3>
-                    <p style={{ color: '#24292e', fontSize: '1rem', lineHeight: '1.6', margin: 0 }}>
+                    <p className="description-text">
                       {repository.description}
                     </p>
                   </div>
@@ -185,6 +206,10 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                             <div
                               className={`progress-fill ${getLanguageClass(lang.name)}`}
                               style={{ width: `${lang.percentage}%` }}
+                              role="progressbar"
+                              aria-valuenow={lang.percentage}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
                             />
                           </div>
                         </div>
@@ -244,10 +269,15 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="github-btn"
+              aria-label={`View ${repository.full_name} on GitHub`}
             >
               View on GitHub
             </a>
-            <button onClick={handleCloseClick} className="close-modal-btn">
+            <button 
+              onClick={handleCloseClick} 
+              className="close-modal-btn"
+              aria-label="Close"
+            >
               Close
             </button>
           </div>

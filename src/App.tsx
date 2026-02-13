@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { SearchBar } from './components/SearchBar';
 import { RepositoryList } from './components/RepositoryList';
 import { RepositoryDetail } from './components/RepositoryDetail';
 import { RepositoryCompare } from './components/RepositoryCompare';
 import { Repository } from './types/repository.types';
 import { formatNumber } from './utils/formatters';
+import { useRepositoryStore } from './store/repositoryStore';
 import './App.css';
 
 function App() {
@@ -12,16 +12,35 @@ function App() {
   const [searchType, setSearchType] = useState<'query' | 'username'>('query');
   const [filters, setFilters] = useState({
     language: '',
-    minStars: undefined,
-    maxStars: undefined,
+    minStars: undefined as number | undefined,
+    maxStars: undefined as number | undefined,
     sortBy: 'stars',
     order: 'desc'
   });
-  const [selectedRepository, setSelectedRepository] = useState<Repository | null>(null);
-  const [compareRepository, setCompareRepository] = useState<Repository | null>(null);
-  const [showCompare, setShowCompare] = useState(false);
+  
+  // Use Zustand store
+  const {
+    selectedRepository,
+    compareRepositories,
+    showCompare,
+    setSelectedRepository,
+    addToCompare,
+    clearCompare,
+    setShowCompare,
+    clearExpiredCache
+  } = useRepositoryStore();
+
   const [totalResults, setTotalResults] = useState(0);
   const [hasSearched, setHasSearched] = useState(true);
+
+  // Clear expired cache periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      clearExpiredCache();
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, [clearExpiredCache]);
 
   useEffect(() => {
     setHasSearched(true);
@@ -42,16 +61,13 @@ function App() {
   };
 
   const handleCompare = (repo: Repository) => {
-    if (!compareRepository) {
-      setCompareRepository(repo);
-    } else {
-      setShowCompare(true);
-    }
+    console.log('Adding to compare:', repo.full_name);
+    addToCompare(repo);
   };
 
   const handleCloseCompare = () => {
     setShowCompare(false);
-    setCompareRepository(null);
+    clearCompare();
   };
 
   const handleQuickSearch = (query: string) => {
@@ -60,13 +76,13 @@ function App() {
     setHasSearched(true);
   };
 
-  // Generate insight text exactly like in screenshot
+  // Generate insight text
   const getInsight = (repo: Repository): string => {
     const stars = repo.stargazers_count ?? 0;
     const language = repo.language || 'Unknown';
     
     if (stars > 100000) {
-      return `octocat: A curated awesome list of interview questions. Feel free to contribute! 🎓`;
+      return `A curated awesome list of interview questions. Feel free to contribute! 🎓`;
     }
     if (repo.name.includes('javascript-questions')) {
       return `A long list of (advanced) JavaScript questions, and their explanations... ✨`;
@@ -93,7 +109,7 @@ function App() {
   return (
     <div className="app-container">
       <div className="main-content">
-        {/* Header Section - exactly like screenshot */}
+        {/* Header Section */}
         <div className="header-section">
           <h1 className="main-title">
             <span className="title-git">GitLens</span>
@@ -101,7 +117,7 @@ function App() {
           </h1>
           <p className="subtitle">Search public repositories</p>
           
-          {/* Search Bar - exactly like screenshot */}
+          {/* Search Bar */}
           <div className="search-container">
             <input
               type="text"
@@ -110,26 +126,30 @@ function App() {
               onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery, searchType)}
               placeholder="react"
               className="search-input"
+              aria-label="Search repositories"
             />
             <button 
               onClick={() => handleSearch(searchQuery, searchType)} 
               className="search-btn"
+              aria-label="Search"
             >
               Search
             </button>
           </div>
         </div>
 
-        {/* Filters and Results Section - exactly like screenshot */}
+        {/* Filters and Results Section - STICKY */}
         {hasSearched && (
           <div className="filters-results-section">
             <div className="filters-container">
               <div className="filter-group">
-                <label className="filter-label">LANGUAGE</label>
+                <label className="filter-label" htmlFor="language-filter">LANGUAGE</label>
                 <select 
+                  id="language-filter"
                   className="filter-select" 
                   value={filters.language}
                   onChange={(e) => handleFilterChange({...filters, language: e.target.value})}
+                  aria-label="Filter by language"
                 >
                   <option value="">All Languages</option>
                   <option value="JavaScript">JavaScript</option>
@@ -137,15 +157,25 @@ function App() {
                   <option value="Python">Python</option>
                   <option value="Java">Java</option>
                   <option value="C++">C++</option>
+                  <option value="C#">C#</option>
+                  <option value="Go">Go</option>
+                  <option value="Rust">Rust</option>
+                  <option value="PHP">PHP</option>
+                  <option value="Ruby">Ruby</option>
+                  <option value="Swift">Swift</option>
+                  <option value="Kotlin">Kotlin</option>
+                  <option value="Dart">Dart</option>
                 </select>
               </div>
               
               <div className="filter-group">
-                <label className="filter-label">SORT BY</label>
+                <label className="filter-label" htmlFor="sort-filter">SORT BY</label>
                 <select 
+                  id="sort-filter"
                   className="filter-select"
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange({...filters, sortBy: e.target.value})}
+                  aria-label="Sort by"
                 >
                   <option value="stars">Stars</option>
                   <option value="forks">Forks</option>
@@ -154,11 +184,13 @@ function App() {
               </div>
               
               <div className="filter-group">
-                <label className="filter-label">ORDER</label>
+                <label className="filter-label" htmlFor="order-filter">ORDER</label>
                 <select 
+                  id="order-filter"
                   className="filter-select"
                   value={filters.order}
                   onChange={(e) => handleFilterChange({...filters, order: e.target.value})}
+                  aria-label="Sort order"
                 >
                   <option value="desc">Descending</option>
                   <option value="asc">Ascending</option>
@@ -166,13 +198,13 @@ function App() {
               </div>
             </div>
             
-            <div className="results-count">
+            <div className="results-count" aria-live="polite" aria-atomic="true">
               {formatNumber(totalResults)} results
             </div>
           </div>
         )}
 
-        {/* Repository Grid - exactly like screenshot */}
+        {/* Repository Grid */}
         <div className="content-wrapper">
           {hasSearched ? (
             <RepositoryList
@@ -184,19 +216,48 @@ function App() {
               getInsight={getInsight}
             />
           ) : (
-            /* Welcome Message */
             <div className="welcome-message">
               <div className="welcome-content">
-                <div className="welcome-icon">🔍</div>
-                <h2>Discover Amazing Repositories</h2>
+                <div className="welcome-icon" aria-hidden="true">🔍</div>
+                <h2 id="welcome-heading">Discover Amazing Repositories</h2>
                 <p>Search for any topic, language, or framework to explore thousands of open-source projects</p>
                 <div className="quick-searches">
                   <div className="search-chips">
-                    <span className="search-chip" onClick={() => handleQuickSearch('react')}>react</span>
-                    <span className="search-chip" onClick={() => handleQuickSearch('vue')}>vue</span>
-                    <span className="search-chip" onClick={() => handleQuickSearch('angular')}>angular</span>
-                    <span className="search-chip" onClick={() => handleQuickSearch('machine learning')}>machine learning</span>
-                    <span className="search-chip" onClick={() => handleQuickSearch('typescript')}>typescript</span>
+                    <button 
+                      className="search-chip" 
+                      onClick={() => handleQuickSearch('react')}
+                      aria-label="Quick search: react"
+                    >
+                      react
+                    </button>
+                    <button 
+                      className="search-chip" 
+                      onClick={() => handleQuickSearch('vue')}
+                      aria-label="Quick search: vue"
+                    >
+                      vue
+                    </button>
+                    <button 
+                      className="search-chip" 
+                      onClick={() => handleQuickSearch('angular')}
+                      aria-label="Quick search: angular"
+                    >
+                      angular
+                    </button>
+                    <button 
+                      className="search-chip" 
+                      onClick={() => handleQuickSearch('machine learning')}
+                      aria-label="Quick search: machine learning"
+                    >
+                      machine learning
+                    </button>
+                    <button 
+                      className="search-chip" 
+                      onClick={() => handleQuickSearch('typescript')}
+                      aria-label="Quick search: typescript"
+                    >
+                      typescript
+                    </button>
                   </div>
                 </div>
               </div>
@@ -204,7 +265,7 @@ function App() {
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer - STICKY BOTTOM */}
         <div className="footer">
           <p>© 2026 GITLENS EXPLORER • GITHUB API</p>
         </div>
@@ -219,11 +280,11 @@ function App() {
         />
       )}
 
-      {/* Compare View */}
-      {showCompare && selectedRepository && compareRepository && (
+      {/* Compare View - FIXED: Now works properly */}
+      {showCompare && compareRepositories.length === 2 && (
         <RepositoryCompare
-          repository1={selectedRepository}
-          repository2={compareRepository}
+          repository1={compareRepositories[0]}
+          repository2={compareRepositories[1]}
           onClose={handleCloseCompare}
         />
       )}
